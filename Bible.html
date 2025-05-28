@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible+ - Enhanced Scripture Study</title>
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --secondary: #166088;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --highlight: #ffd166;
+            --success: #06d6a0;
+            --reading-mode: #f5f5dc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .app-layout {
+            display: flex;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .main-content {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            max-height: 80vh;
+        }
+
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab-btn {
+            padding: 0.5rem 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #555;
+            transition: all 0.3s ease;
+            flex: 1;
+            text-align: center;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .book-list {
+            list-style: none;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+
+        .book-item {
+            padding: 0.5rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .book-item:hover {
+            background: #f0f0f0;
+        }
+
+        .book-item.active {
+            background: var(--highlight);
+            font-weight: bold;
+        }
+
+        .book-progress {
+            width: 60px;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .book-progress-fill {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+        }
+
+        .chapter-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .chapter-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chapter-btn:hover {
+            background: #ddd;
+        }
+
+        .chapter-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .verse-container {
+            margin-top: 1rem;
+            line-height: 1.8;
+        }
+
+        .verse {
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .verse:hover {
+            background: #f9f9f9;
+        }
+
+        .verse-number {
+            font-weight: bold;
+            color: var(--primary);
+            margin-right: 0.3rem;
+        }
+
+        .verse-actions {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+        }
+
+        .verse:hover .verse-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .verse-action-btn {
+            background: rgba(0,0,0,0.1);
+            border: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .study-plan {
+            margin-top: 1rem;
+        }
+
+        .study-day {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .study-day:hover {
+            transform: translateX(5px);
+        }
+
+        .study-day.completed {
+            background: #e8f5e9;
+            border-left-color: var(--success);
+        }
+
+        .study-day h3 {
+            margin-bottom: 0.5rem;
+            color: var(--secondary);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .study-passage {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .search-bar {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            position: relative;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .search-bar button {
+            padding: 0.75rem 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 0 0 4px 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 10;
+            display: none;
+        }
+
+        .search-result-item {
+            padding: 0.75rem;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .search-result-item:hover {
+            background: #f5f5f5;
+        }
+
+        .reading-mode .verse-container {
+            background: var(--reading-mode);
+            padding: 2rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            line-height: 2;
+        }
+
+        .reading-mode .verse {
+            margin-bottom: 1.5rem;
+        }
+
+        .reading-mode-toggle {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 1rem;
+            right: 4rem;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .dark-mode {
+            background: #121212;
+            color: #e0e0e0;
+        }
+
+        .dark-mode .sidebar,
+        .dark-mode .main-content {
+            background: #1e1e1e;
+            color: #e0e0e0;
+        }
+
+        .dark-mode .verse:hover,
+        .dark-mode .study-day:hover,
+        .dark-mode .search-result-item:hover {
+            background: #2a2a2a;
+        }
+
+        .dark-mode .study-day {
+            background: #2a2a2a;
+        }
+
+        .dark-mode .study-day.completed {
+            background: #1b3a1b;
+        }
+
+        .dark-mode .verse-number {
+            color: var(--highlight);
+        }
+
+        .notes-container {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        .dark-mode .notes-container {
+            background: #2a2a2a;
+        }
+
+        .notes-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+            margin-bottom: 0.5rem;
+        }
+
+        .saved-notes {
+            margin-top: 1rem;
+        }
+
+        .note-item {
+            padding: 1rem;
+            background: white;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+
+        .dark-mode .note-item {
+            background: #2a2a2a;
+        }
+
+        .note-date {
+            font-size: 0.8rem;
+            color: #777;
+            margin-bottom: 0.5rem;
+        }
+
+        .dark-mode .note-date {
+            color: #aaa;
+        }
+
+        .note-delete {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: none;
+            border: none;
+            color: #ff4444;
+            cursor: pointer;
+        }
+
+        .audio-player {
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .bookmark-btn {
+            position: absolute;
+            top: 1rem;
+            right: 7rem;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .bookmarks-panel {
+            position: absolute;
+            top: 0;
+            right: -350px;
+            width: 350px;
+            height: 100%;
+            background: white;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+            padding: 1rem;
+            transition: transform 0.3s ease;
+            z-index: 20;
+            overflow-y: auto;
+        }
+
+        .dark-mode .bookmarks-panel {
+            background: #1e1e1e;
+        }
+
+        .bookmarks-panel.active {
+            transform: translateX(-350px);
+        }
+
+        .bookmark-item {
+            padding: 0.75rem;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .dark-mode .bookmark-item {
+            border-bottom-color: #2a2a2a;
+        }
+
+        .bookmark-item:hover {
+            background: #f5f5f5;
+        }
+
+        .dark-mode .bookmark-item:hover {
+            background: #2a2a2a;
+        }
+
+        .close-bookmarks {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .app-layout {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+            }
+            .bookmarks-panel {
+                width: 100%;
+                right: -100%;
+            }
+            .bookmarks-panel.active {
+                transform: translateX(-100%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Bible+</h1>
+            <p class="subtitle">Enhanced Scripture Study App</p>
+            <button class="theme-toggle" id="theme-toggle">🌓</button>
+            <button class="reading-mode-toggle" id="reading-mode-toggle">📖</button>
+            <button class="bookmark-btn" id="bookmark-btn">🔖</button>
+        </header>
+
+        <div class="app-layout">
+            <div class="sidebar">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" data-tab="bible">Bible</button>
+                    <button class="tab-btn" data-tab="study-plan">Study Plan</button>
+                    <button class="tab-btn" data-tab="notes">Notes</button>
+                </div>
+
+                <div class="tab-content active" id="bible">
+                    <div class="search-bar">
+                        <input type="text" id="search-input" placeholder="Search Bible...">
+                        <button id="search-btn">Search</button>
+                        <div class="search-results" id="search-results"></div>
+                    </div>
+
+                    <h3>Old Testament</h3>
+                    <ul class="book-list" id="ot-books"></ul>
+
+                    <h3>New Testament</h3>
+                    <ul class="book-list" id="nt-books"></ul>
+                </div>
+
+                <div class="tab-content" id="study-plan">
+                    <h3>One-Year Bible Reading Plan</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="plan-progress"></div>
+                    </div>
+                    <div id="study-plan-container"></div>
+                </div>
+
+                <div class="tab-content" id="notes">
+                    <h3>Study Notes</h3>
+                    <div class="notes-container">
+                        <textarea class="notes-textarea" id="notes-textarea" placeholder="Write your notes here..."></textarea>
+                        <button id="save-note">Save Note</button>
+                        <div class="saved-notes" id="saved-notes"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <h2 id="current-book">Select a Book</h2>
+                <div class="chapter-list" id="chapter-list"></div>
+                <div class="verse-container" id="verse-container"></div>
+                <audio class="audio-player" id="audio-player" controls></audio>
+            </div>
+        </div>
+
+        <div class="bookmarks-panel" id="bookmarks-panel">
+            <button class="close-bookmarks" id="close-bookmarks">×</button>
+            <h3>Your Bookmarks</h3>
+            <div id="bookmarks-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // ===== BIBLE DATA ===== //
+        const bible = {
+            oldTestament: [
+                { name: "Genesis", chapters: 50, progress: 15 },
+                { name: "Exodus", chapters: 40, progress: 8 },
+                // ... (all OT books)
+            ],
+            newTestament: [
+                { name: "Matthew", chapters: 28, progress: 5 },
+                { name: "Mark", chapters: 16, progress: 3 },
+                // ... (all NT books)
+            ]
+        };
+
+        // ===== STUDY PLAN ===== //
+        const studyPlan = [
+            { day: 1, passage: "Genesis 1-3", description: "The Creation and Fall of Man", completed: true },
+            { day: 2, passage: "Genesis 4-7", description: "Cain and Abel, Noah's Ark", completed: true },
+            // ... (all 365 days)
+            { day: 365, passage: "Revelation 20-22", description: "The New Heaven and New Earth", completed: false }
+        ];
+
+        // ===== APP STATE ===== //
+        let state = {
+            currentBook: null,
+            currentChapter: null,
+            darkMode: false,
+            readingMode: false,
+            notes: [],
+            bookmarks: [],
+            audioEnabled: true
+        };
+
+        // ===== INITIALIZE APP ===== //
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const otBooksList = document.getElementById('ot-books');
+            const ntBooksList = document.getElementById('nt-books');
+            const chapterList = document.getElementById('chapter-list');
+            const verseContainer = document.getElementById('verse-container');
+            const currentBookEl = document.getElementById('current-book');
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const studyPlanContainer = document.getElementById('study-plan-container');
+            const searchInput = document.getElementById('search-input');
+            const searchBtn = document.getElementById('search-btn');
+            const searchResults = document.getElementById('search-results');
+            const themeToggle = document.getElementById('theme-toggle');
+            const readingModeToggle = document.getElementById('reading-mode-toggle');
+            const audioPlayer = document.getElementById('audio-player');
+            const notesTextarea = document.getElementById('notes-textarea');
+            const saveNoteBtn = document.getElementById('save-note');
+            const savedNotes = document.getElementById('saved-notes');
+            const bookmarkBtn = document.getElementById('bookmark-btn');
+            const bookmarksPanel = document.getElementById('bookmarks-panel');
+            const closeBookmarks = document.getElementById('close-bookmarks');
+            const bookmarksList = document.getElementById('bookmarks-list');
+
+            // Load books
+            function loadBooks() {
+                bible.oldTestament.forEach(book => {
+                    const li = document.createElement('li');
+                    li.className = 'book-item';
+                    li.innerHTML = `
+                        <span>${book.name}</span>
+                        <div class="book-progress">
+                            <div class="book-progress-fill" style="width: ${(book.progress / book.chapters) * 100}%"></div>
+                        </div>
+                    `;
+                    li.addEventListener('click', () => loadChapters(book.name, book.chapters));
+                    otBooksList.appendChild(li);
+                });
+
+                bible.newTestament.forEach(book => {
+                    const li = document.createElement('li');
+                    li.className = 'book-item';
+                    li.innerHTML = `
+                        <span>${book.name}</span>
+                        <div class="book-progress">
+                            <div class="book-progress-fill" style="width: ${(book.progress / book.chapters) * 100}%"></div>
+                        </div>
+                    `;
+                    li.addEventListener('click', () => loadChapters(book.name, book.chapters));
+                    ntBooksList.appendChild(li);
+                });
+            }
+
+            // Load chapters
+            function loadChapters(bookName, chapterCount) {
+                state.currentBook = bookName;
+                currentBookEl.textContent = bookName;
+                chapterList.innerHTML = '';
+
+                for (let i = 1; i <= chapterCount; i++) {
+                    const btn = document.createElement('button');
+                    btn.className = 'chapter-btn';
+                    btn.textContent = i;
+                    btn.addEventListener('click', () => loadVerses(bookName, i));
+                    chapterList.appendChild(btn);
+                }
+            }
+
+            // Load verses (simulated)
+            function loadVerses(bookName, chapter) {
+                state.currentChapter = chapter;
+                verseContainer.innerHTML = `<p>Loading ${bookName} ${chapter}...</p>`;
+                
+                // Simulate API delay
+                setTimeout(() => {
+                    verseContainer.innerHTML = '';
+                    for (let i = 1; i <= 20; i++) { // Assume 20 verses per chapter for demo
+                        const verseDiv = document.createElement('div');
+                        verseDiv.className = 'verse';
+                        verseDiv.innerHTML = `
+                            <span class="verse-number">${i}</span>
+                            <span>This is a simulated verse from ${bookName} ${chapter}:${i}. In a real app, this would fetch from an API.</span>
+                            <div class="verse-actions">
+                                <button class="verse-action-btn" data-action="highlight">🖍️</button>
+                                <button class="verse-action-btn" data-action="bookmark">🔖</button>
+                                <button class="verse-action-btn" data-action="share">↗️</button>
+                            </div>
+                        `;
+                        verseContainer.appendChild(verseDiv);
+                    }
+
+                    // Load audio for chapter
+                    if (state.audioEnabled) {
+                        audioPlayer.src = `https://example.com/audio/${bookName.toLowerCase()}_${chapter}.mp3`;
+                        audioPlayer.style.display = 'block';
+                    }
+                }, 500);
+            }
+
+            // Load study plan
+            function loadStudyPlan() {
+                studyPlanContainer.innerHTML = '';
+                const completedDays = studyPlan.filter(day => day.completed).length;
+                const progress = (completedDays / studyPlan.length) * 100;
+                document.getElementById('plan-progress').style.width = `${progress}%`;
+
+                studyPlan.forEach(day => {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = `study-day ${day.completed ? 'completed' : ''}`;
+                    dayDiv.innerHTML = `
+                        <h3>Day ${day.day} ${day.completed ? '✓' : ''}</h3>
+                        <p class="study-passage">${day.passage}</p>
+                        <p>${day.description}</p>
+                    `;
+                    dayDiv.addEventListener('click', () => {
+                        // Parse passage and load it
+                        const [book, chapters] = day.passage.split(' ');
+                        const [startChapter] = chapters.split('-');
+                        loadChapters(book, parseInt(startChapter) + 3); // +3 for demo
+                    });
+                    studyPlanContainer.appendChild(dayDiv);
+                });
+            }
+
+            // Search functionality
+            function searchBible(query) {
+                // Simulated search results
+                const results = [
+                    { reference: "John 3:16", text: "For God so loved the world..." },
+                    { reference: "Psalm 23:1", text: "The Lord is my shepherd..." },
+                    { reference: "Romans 8:28", text: "And we know that in all things..." }
+                ].filter(item => 
+                    item.reference.toLowerCase().includes(query.toLowerCase()) || 
+                    item.text.toLowerCase().includes(query.toLowerCase())
+                );
+
+                searchResults.innerHTML = '';
+                if (results.length === 0) {
+                    const noResults = document.createElement('div');
+                    noResults.className = 'search-result-item';
+                    noResults.textContent = 'No results found';
+                    searchResults.appendChild(noResults);
+                } else {
+                    results.forEach(result => {
+                        const resultItem = document.createElement('div');
+                        resultItem.className = 'search-result-item';
+                        resultItem.innerHTML = `
+                            <strong>${result.reference}</strong>
+                            <p>${result.text}</p>
+                        `;
+                        resultItem.addEventListener('click', () => {
+                            const [book, chapterVerse] = result.reference.split(' ');
+                            const [chapter] = chapterVerse.split(':');
+                            loadChapters(book, parseInt(chapter));
+                            searchResults.style.display = 'none';
+                        });
+                        searchResults.appendChild(resultItem);
+                    });
+                }
+                searchResults.style.display = 'block';
+            }
+
+            // Load saved notes
+            function loadNotes() {
+                savedNotes.innerHTML = '';
+                state.notes.forEach((note, index) => {
+                    const noteEl = document.createElement('div');
+                    noteEl.className = 'note-item';
+                    noteEl.innerHTML = `
+                        <div class="note-date">${new Date(note.date).toLocaleString()}</div>
+                        <p>${note.text}</p>
+                        <button class="note-delete" data-index="${index}">✕</button>
+                    `;
+                    savedNotes.appendChild(noteEl);
+                });
+
+                // Add delete handlers
+                document.querySelectorAll('.note-delete').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const index = e.target.getAttribute('data-index');
+                        state.notes.splice(index, 1);
+                        saveToLocalStorage();
+                        loadNotes();
+                    });
+                });
+            }
+
+            // Load bookmarks
+            function loadBookmarks() {
+                bookmarksList.innerHTML = '';
+                state.bookmarks.forEach((bookmark, index) => {
+                    const bookmarkEl = document.createElement('div');
+                    bookmarkEl.className = 'bookmark-item';
+                    bookmarkEl.innerHTML = `
+                        <strong>${bookmark.reference}</strong>
+                        <p>${bookmark.note || ''}</p>
+                    `;
+                    bookmarkEl.addEventListener('click', () => {
+                        const [book, chapterVerse] = bookmark.reference.split(' ');
+                        const [chapter] = chapterVerse.split(':');
+                        loadChapters(book, parseInt(chapter));
+                        bookmarksPanel.classList.remove('active');
+                    });
+                    bookmarksList.appendChild(bookmarkEl);
+                });
+            }
+
+            // Save to localStorage
+            function saveToLocalStorage() {
+                localStorage.setItem('bibleAppState', JSON.stringify(state));
+            }
+
+            // Load from localStorage
+            function loadFromLocalStorage() {
+                const savedState = localStorage.getItem('bibleAppState');
+                if (savedState) {
+                    state = JSON.parse(savedState);
+                    
+                    // Apply dark mode if enabled
+                    if (state.darkMode) {
+                        document.body.classList.add('dark-mode');
+                    }
+                    
+                    // Apply reading mode if enabled
+                    if (state.readingMode) {
+                        document.getElementById('verse-container').classList.add('reading-mode');
+                    }
+                }
+            }
+
+            // Initialize app
+            function init() {
+                loadBooks();
+                loadStudyPlan();
+                loadFromLocalStorage();
+                loadNotes();
+                loadBookmarks();
+
+                // Tab switching
+                tabButtons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        tabButtons.forEach(b => b.classList.remove('active'));
+                        tabContents.forEach(c => c.classList.remove('active'));
+                        
+                        btn.classList.add('active');
+                        const tabId = btn.getAttribute('data-tab');
+                        document.getElementById(tabId).classList.add('active');
+                    });
+                });
+
+                // Search functionality
+                searchBtn.addEventListener('click', () => {
+                    const query = searchInput.value.trim();
+                    if (query) {
+                        searchBible(query);
+                    }
+                });
+
+                searchInput.addEventListener('input', () => {
+                    if (searchInput.value.trim() === '') {
+                        searchResults.style.display = 'none';
+                    }
+                });
+
+                // Theme toggle
+                themeToggle.addEventListener('click', () => {
+                    state.darkMode = !state.darkMode;
+                    document.body.classList.toggle('dark-mode');
+                    saveToLocalStorage();
+                });
+
+                // Reading mode toggle
+                readingModeToggle.addEventListener('click', () => {
+                    state.readingMode = !state.readingMode;
+                    document.getElementById('verse-container').classList.toggle('reading-mode');
+                    saveToLocalStorage();
+                });
+
+                // Save note
+                saveNoteBtn.addEventListener('click', () => {
+                    const noteText = notesTextarea.value.trim();
+                    if (noteText) {
+                        state.notes.unshift({
+                            text: noteText,
+                            date: new Date().toISOString(),
+                            reference: state.currentBook && state.currentChapter ? 
+                                `${state.currentBook} ${state.currentChapter}` : null
+                        });
+                        saveToLocalStorage();
+                        loadNotes();
+                        notesTextarea.value = '';
+                    }
+                });
+
+                // Bookmark current passage
+                verseContainer.addEventListener('click', (e) => {
+                    if (e.target.getAttribute('data-action') === 'bookmark') {
+                        const verseEl = e.target.closest('.verse');
+                        const verseNum = verseEl.querySelector('.verse-number').textContent;
+                        
+                        if (state.currentBook && state.currentChapter) {
+                            state.bookmarks.unshift({
+                                reference: `${state.currentBook} ${state.currentChapter}:${verseNum}`,
+                                date: new Date().toISOString(),
+                                note: prompt("Add a note to this bookmark:")
+                            });
+                            saveToLocalStorage();
+                            loadBookmarks();
+                        }
+                    }
+                });
+
+                // Toggle bookmarks panel
+                bookmarkBtn.addEventListener('click', () => {
+                    bookmarksPanel.classList.add('active');
+                });
+
+                closeBookmarks.addEventListener('click', () => {
+                    bookmarksPanel.classList.remove('active');
+                });
+
+                // Close search results when clicking elsewhere
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.search-bar')) {
+                        searchResults.style.display = 'none';
+                    }
+                });
+            }
+
+            init();
+        });
+    </script>
+</body>
+</html>
